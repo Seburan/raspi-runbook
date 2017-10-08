@@ -27,60 +27,26 @@ server {
 	return 301 $scheme://resume.severin.jp$request_uri;
 }
 
-# REDIRECT HTTP TO HTTPS
-#server {
-#	server_name	chococlub.jp.local chococlub.jp;
-#	add_header	Strict-Transport-Security max-age=15768000;
-#	return	301	https://chococlub.jp$request_uri;
-#}
-
-##
-# Root Site : HTTP : resume.severin.jp
-##
+# REDIRECT HTTP TO HTTPS and set default server for listen port
 server {
-	listen   80; ## listen for ipv4; this line is default and implied
-	#listen   [::]:80 default_server ipv6only=on; ## listen for ipv6
+    listen 80 default_server;
+    #listen [::]:80 default_server; ## no IPv6 at this time
+    server_name *.severin.jp;
 
-	root /web/resume.severin.jp/www;
-	index index.html index.htm;
+    # Discourage deep links by using a permanent redirect to home page of HTTPS site
+    #return 301 https://$host;
 
-	# Make site accessible from http://mysite.com.local/
-	server_name resume.severin.jp.local resume.severin.jp pi.resume.severin.jp;
-
-	# add log configuration
-	error_log /web/resume.severin.jp/logs/error.log error;
-	access_log /web/resume.severin.jp/logs/access.log;	
-
-	# include global files for php wordpress
-	include global/restrictions.conf;
-        	
-	# include global file for LetsEncrypt
-	include global/letsencrypt.conf;
-
-	#error_page 404 /404.html;	
-        
-	# location directices
-
-        ## try url with and without trailing slash, try to append .html to find html files
-        location / {
-                try_files $uri $uri/ $uri.html =404;
-        }
-
-        ## Directives to send expires headers and turn off 404 error logging.
-        location ~* \.(js|css|png|jpg|jpeg|gif|ico)$ {
-                expires 24h;
-                log_not_found off;
-        }
-
-
+    # Alternatively, redirect all HTTP links to the matching HTTPS page
+    return 301 https://$host$request_uri;
 }
+
 
 ##
 # Root Site : HTTPS : resume.severin.jp
 ##
 server {
 
-        listen	443 ssl; ## listen for ipv4; this line is default and implied
+        listen	443 ssl default_server; ## listen for ipv4; this line is default and implied
         #listen   [::]:443 default_server ipv6only=on; ## listen for ipv6
 
         # Get SSL setup
