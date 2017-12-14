@@ -1,0 +1,49 @@
+#!/bin/bash
+
+echo "Content-type: text/html"
+echo ""
+
+echo "<html>"
+echo "<head>"
+echo "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">"
+echo "<title>Bash CGI script</title>"
+echo "</head>"
+echo "<body>"
+echo "<p>Hello Requester, Your IP address is $REMOTE_ADDR</p>"
+echo "<pre>"
+
+#logging
+logger -s "$SCRIPT_FILENAME execution requested from $HTTP_HOST by $REMOTE_ADDR"
+echo "User `whoami` is running the script."
+
+# pull from master
+echo ""
+echo "Updating resume.severin.jp..."
+echo ""
+cd /web/resume.severin.jp/www/
+git pull origin master 2>&1
+
+# push to seburan.github.io
+echo ""
+echo "github.severin.jp..."
+echo ""
+git push live master:master 2>&1
+
+# sync to aws
+# this command will synchronize current folder with target s3 bucket
+# --acl public-read will allow public read for new files
+# --delete (boolean) Files that exist in the destination but not in the source are deleted during sync.
+# --exclude "*" will exclude everything unless it is specified in --include
+# --include the following file types : html, css, js, jpg, ico, eot, otf, svg, tff, woff, woff2
+echo ""
+echo "aws.severin.jp..."
+echo ""
+aws --profile site-admin@severin.jp s3 sync --acl public-read --delete --exclude "*" --include "*.html" --include "*.css" --include "*.js" --include "*.jpg" --include "*.ico" --include "*.eot" --include "*.otf" --include "*.svg" --include "*.ttf" --include "*.woff" --include "*.woff2" ./ s3://aws.severin.jp 2>&1
+
+echo "</pre>"
+echo "<p>Update complete</p>"
+echo "</body>"
+echo "</html>"
+
+exit 0
+
